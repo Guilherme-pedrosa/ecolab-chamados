@@ -299,16 +299,17 @@ export default function Chamados() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Nº OS</TableHead>
-                      <TableHead>Nº Tarefa</TableHead>
-                      <TableHead>Data OS</TableHead>
-                      <TableHead>Data Atend.</TableHead>
-                      <TableHead>Dias</TableHead>
-                      <TableHead>Distrito</TableHead>
-                      <TableHead>Nome GT</TableHead>
-                      <TableHead>Observação</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Ações</TableHead>
+              <TableHead>Nº OS</TableHead>
+              <TableHead>Nº Tarefa</TableHead>
+              <TableHead>Data OS</TableHead>
+              <TableHead>Data Atend.</TableHead>
+              <TableHead>Nº Dias</TableHead>
+              <TableHead>Distrito</TableHead>
+              <TableHead>Nome GT</TableHead>
+              <TableHead>Cliente</TableHead>
+              <TableHead className="max-w-xs">Observação</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="text-right">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>

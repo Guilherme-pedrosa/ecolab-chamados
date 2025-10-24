@@ -104,6 +104,7 @@ export function ChamadoRow({ chamado, onUpdate, onDelete }: ChamadoRowProps) {
         <TableCell>{calcularDias(chamado.dataOS)}</TableCell>
         <TableCell>{chamado.distrito}</TableCell>
         <TableCell>{chamado.nomeGT}</TableCell>
+        <TableCell>{chamado.cliente}</TableCell>
         <TableCell className="max-w-xs">
           <Textarea
             value={editData.observacao}
@@ -162,12 +163,11 @@ export function ChamadoRow({ chamado, onUpdate, onDelete }: ChamadoRowProps) {
           ? new Date(chamado.dataAtendimento).toLocaleDateString('pt-BR') 
           : "-"}
       </TableCell>
-      <TableCell>{calcularDias(chamado.dataOS)}</TableCell>
+       <TableCell>{calcularDias(chamado.dataOS)}</TableCell>
       <TableCell>{chamado.distrito}</TableCell>
       <TableCell>{chamado.nomeGT}</TableCell>
-      <TableCell className="max-w-xs truncate" title={chamado.observacao || ""}>
-        {chamado.observacao || "-"}
-      </TableCell>
+      <TableCell>{chamado.cliente}</TableCell>
+      <TableCell className="max-w-xs truncate">{chamado.observacao || "-"}</TableCell>
       <TableCell>{getStatusBadge(chamado.status)}</TableCell>
       <TableCell className="text-right">
         <div className="flex gap-1 justify-end">
