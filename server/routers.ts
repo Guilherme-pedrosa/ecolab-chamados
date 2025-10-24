@@ -73,6 +73,38 @@ export const appRouter = router({
         return { success: true };
       }),
     
+    exportToExcel: publicProcedure.query(async () => {
+      const { getAllChamados } = await import("./db");
+      const XLSX = await import("xlsx");
+      
+      const chamados = await getAllChamados();
+      
+      // Preparar dados para exportação
+      const exportData = chamados.map(c => ({
+        "Nº OS": c.numeroOS,
+        "Data OS": new Date(c.dataOS).toLocaleDateString('pt-BR'),
+        "Dias em Aberto": Math.floor((new Date().getTime() - new Date(c.dataOS).getTime()) / (1000 * 60 * 60 * 24)),
+        "Distrito": c.distrito || '',
+        "Nome GT": c.nomeGT || '',
+        "Cód. Cliente": c.codCliente || '',
+        "Cliente": c.cliente || '',
+        "Nome TRA": c.nomeTRA || '',
+        "Status": c.status === 'aberto' ? 'Aberto' : c.status === 'em_andamento' ? 'Em Andamento' : 'Fechado',
+        "Data Criação": new Date(c.createdAt).toLocaleDateString('pt-BR'),
+      }));
+      
+      // Criar workbook
+      const ws = XLSX.utils.json_to_sheet(exportData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Chamados");
+      
+      // Converter para base64
+      const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+      const base64 = buffer.toString('base64');
+      
+      return { fileBase64: base64, filename: `chamados_${new Date().toISOString().split('T')[0]}.xlsx` };
+    }),
+    
     importFromExcel: protectedProcedure
       .input((val: unknown) => {
         if (typeof val === "object" && val !== null && "fileBase64" in val && typeof val.fileBase64 === "string") {

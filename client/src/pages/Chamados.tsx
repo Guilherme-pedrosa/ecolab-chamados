@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Upload, Search, Filter, Plus, Eye } from "lucide-react";
+import { Upload, Search, Filter, Plus, Eye, Download } from "lucide-react";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
 import DashboardLayout from "@/components/DashboardLayout";
@@ -42,6 +42,9 @@ export default function Chamados() {
   const [, setLocation] = useLocation();
 
   const { data: chamados, isLoading, refetch } = trpc.chamados.list.useQuery();
+  const { refetch: exportExcel, isFetching: isExporting } = trpc.chamados.exportToExcel.useQuery(undefined, {
+    enabled: false,
+  });
 
   const filteredChamados = useMemo(() => {
     if (!chamados) return [];
@@ -137,7 +140,25 @@ export default function Chamados() {
               Gerencie todos os chamados da Ecolab
             </p>
           </div>
-          <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={async () => {
+                const result = await exportExcel();
+                if (result.data) {
+                  const link = document.createElement('a');
+                  link.href = `data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,${result.data.fileBase64}`;
+                  link.download = result.data.filename;
+                  link.click();
+                  toast.success('Planilha exportada com sucesso!');
+                }
+              }}
+              disabled={isExporting}
+            >
+              <Download className="mr-2 h-4 w-4" />
+              {isExporting ? 'Exportando...' : 'Exportar Excel'}
+            </Button>
+            <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
             <DialogTrigger asChild>
               <Button>
                 <Upload className="mr-2 h-4 w-4" />
@@ -170,7 +191,8 @@ export default function Chamados() {
                 </Button>
               </div>
             </DialogContent>
-          </Dialog>
+            </Dialog>
+          </div>
         </div>
 
         {/* Cards de estatísticas */}

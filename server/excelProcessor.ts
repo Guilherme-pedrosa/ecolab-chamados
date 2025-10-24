@@ -12,12 +12,123 @@ export interface ChamadoExcelData {
 
 /**
  * Processa um buffer de arquivo Excel e extrai os dados dos chamados
+ * Suporta dois formatos:
+ * 1. Planilha consolidada com múltiplos chamados (formato tabela)
+ * 2. Ordem de serviço individual (formato formulário)
  */
 export function processExcelFile(buffer: Buffer): ChamadoExcelData[] {
   const workbook = XLSX.read(buffer, { type: 'buffer' });
   const chamados: ChamadoExcelData[] = [];
 
-  // Processar todas as sheets
+  // Tentar processar como OS individual primeiro
+  const osIndividual = processOSIndividual(workbook);
+  if (osIndividual) {
+    chamados.push(osIndividual);
+    return chamados;
+  }
+
+  // Se não for OS individual, processar como planilha consolidada
+  return processConsolidatedSheet(workbook);
+}
+
+/**
+ * Processa uma ordem de serviço individual (formato formulário)
+ */
+function processOSIndividual(workbook: XLSX.WorkBook): ChamadoExcelData | null {
+  // Procurar pela sheet principal (geralmente a primeira ou com nome específico)
+  const sheetNames = ['OS_Terceiro', workbook.SheetNames[0]];
+  
+  for (const sheetName of sheetNames) {
+    if (!workbook.Sheets[sheetName]) continue;
+    
+    const worksheet = workbook.Sheets[sheetName];
+    const data = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
+    
+    let numeroOS: string | null = null;
+    let dataOS: Date | null = null;
+    let distrito: string | null = null;
+    let nomeGT: string | null = null;
+    let codCliente: string | null = null;
+    let cliente: string | null = null;
+    let nomeTRA: string | null = null;
+    
+    // Percorrer as linhas procurando pelos campos
+    for (let i = 0; i < Math.min(80, data.length); i++) {
+      const row = data[i];
+      if (!row || row.length === 0) continue;
+      
+      // Procurar número da OS
+      for (let j = 0; j < row.length; j++) {
+        const cell = row[j];
+        const cellStr = String(cell).toLowerCase().trim();
+        
+        // Número da OS
+        if (cellStr === 'nº' && j + 1 < row.length && typeof row[j + 1] === 'number') {
+          numeroOS = String(row[j + 1]);
+        }
+        
+        // Data de abertura
+        if (cellStr.includes('data abertura') && j + 1 < row.length) {
+          const dateValue = row[j + 1];
+          if (typeof dateValue === 'number') {
+            // Converter serial date do Excel para Date
+            const date = new Date((dateValue - 25569) * 86400 * 1000);
+            dataOS = date;
+          } else if (dateValue) {
+            dataOS = new Date(dateValue);
+          }
+        }
+        
+        // Distrito
+        if (cellStr.includes('distrito') && j + 1 < row.length) {
+          distrito = String(row[j + 1]);
+        }
+        
+        // Nome do solicitante (GT)
+        if (cellStr.includes('nome do solicitante') && j + 1 < row.length) {
+          nomeGT = String(row[j + 1]);
+        }
+        
+        // Código do cliente
+        if (cellStr.includes('cód. jde do cliente') && j + 1 < row.length) {
+          codCliente = String(row[j + 1]);
+        }
+        
+        // Nome do cliente
+        if (cellStr.includes('nome do cliente') && j + 1 < row.length) {
+          cliente = String(row[j + 1]);
+        }
+        
+        // Nome TRA
+        if (cellStr.includes('nome tra') && j + 1 < row.length) {
+          nomeTRA = String(row[j + 1]);
+        }
+      }
+    }
+    
+    // Se encontrou pelo menos o número da OS, retornar
+    if (numeroOS) {
+      return {
+        numeroOS,
+        dataOS: dataOS || new Date(),
+        distrito: distrito || undefined,
+        nomeGT: nomeGT || undefined,
+        codCliente: codCliente || undefined,
+        cliente: cliente || undefined,
+        nomeTRA: nomeTRA || undefined,
+      };
+    }
+  }
+  
+  return null;
+}
+
+/**
+ * Processa planilha consolidada com múltiplos chamados (formato tabela)
+ */
+function processConsolidatedSheet(workbook: XLSX.WorkBook): ChamadoExcelData[] {
+  const chamados: ChamadoExcelData[] = [];
+
   for (const sheetName of workbook.SheetNames) {
     const worksheet = workbook.Sheets[sheetName];
     const data = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
@@ -28,8 +139,8 @@ export function processExcelFile(buffer: Buffer): ChamadoExcelData[] {
       const row = data[i];
       if (row && row.some((cell: any) => 
         String(cell).toLowerCase().includes('o.s') || 
-        String(cell).toLowerCase().includes('os') ||
-        String(cell).toLowerCase().includes('data')
+        String(cell).toLowerCase().includes('nº o.s') ||
+        (String(cell).toLowerCase().includes('data') && String(cell).toLowerCase().includes('os'))
       )) {
         headerRowIndex = i;
         break;
@@ -68,10 +179,10 @@ export function processExcelFile(buffer: Buffer): ChamadoExcelData[] {
       const dataCell = row[colMap.dataOS];
       
       if (typeof dataCell === 'number') {
-        // Excel date serial number
-        dataOS = XLSX.SSF.parse_date_code(dataCell);
+        // Converter serial date do Excel para Date
+        const date = new Date((dataCell - 25569) * 86400 * 1000);
+        dataOS = date;
       } else if (typeof dataCell === 'string') {
-        // Try to parse string date (DD/MM/YYYY)
         const parts = dataCell.split('/');
         if (parts.length === 3) {
           dataOS = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
