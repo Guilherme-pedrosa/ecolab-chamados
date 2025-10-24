@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, Plus } from "lucide-react";
+import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { toast } from "sonner";
 
@@ -46,6 +46,17 @@ export default function ChamadoDetalhes() {
   const { data: evolucoes, refetch: refetchEvolucoes } = trpc.evolucoes.getByChamadoId.useQuery({ chamadoId });
   
   const utils = trpc.useUtils();
+  
+  const deleteChamado = trpc.chamados.delete.useMutation({
+    onSuccess: () => {
+      toast.success("Chamado excluído com sucesso!");
+      setLocation("/chamados");
+    },
+    onError: (error) => {
+      toast.error("Erro ao excluir chamado: " + error.message);
+    },
+  });
+  
   const updateChamado = trpc.chamados.update.useMutation({
     onSuccess: () => {
       utils.chamados.list.invalidate();
@@ -137,16 +148,30 @@ export default function ChamadoDetalhes() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => setLocation("/chamados")}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Chamado #{chamado.numeroOS}</h1>
-            <p className="text-muted-foreground">
-              Aberto há {calcularDias(chamado.dataOS)} dias
-            </p>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="icon" onClick={() => setLocation("/chamados")}>
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">Chamado #{chamado.numeroOS}</h1>
+              <p className="text-muted-foreground">
+                Aberto há {calcularDias(chamado.dataOS)} dias
+              </p>
+            </div>
           </div>
+          <Button
+            variant="destructive"
+            onClick={() => {
+              if (confirm(`Tem certeza que deseja excluir o chamado ${chamado.numeroOS}?`)) {
+                deleteChamado.mutate({ id: chamadoId });
+              }
+            }}
+            disabled={deleteChamado.isPending}
+          >
+            <Trash2 className="mr-2 h-4 w-4" />
+            {deleteChamado.isPending ? "Excluindo..." : "Excluir"}
+          </Button>
         </div>
 
         {/* Informações do Chamado */}

@@ -27,10 +27,11 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Upload, Search, Filter, Plus, Eye, Download } from "lucide-react";
+import { Upload, Search, Filter, Plus, Eye, Download, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
 import DashboardLayout from "@/components/DashboardLayout";
+import { ChamadoRow } from "@/components/ChamadoRow";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 
@@ -88,6 +89,16 @@ export default function Chamados() {
     );
   };
 
+  const deleteMutation = trpc.chamados.delete.useMutation({
+    onSuccess: () => {
+      refetch();
+      toast.success("Chamado excluído com sucesso!");
+    },
+    onError: (error) => {
+      toast.error("Erro ao excluir chamado: " + error.message);
+    },
+  });
+  
   const importMutation = trpc.chamados.importFromExcel.useMutation({
     onSuccess: (result) => {
       refetch();
@@ -289,41 +300,25 @@ export default function Chamados() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Nº OS</TableHead>
+                      <TableHead>Nº Tarefa</TableHead>
                       <TableHead>Data OS</TableHead>
+                      <TableHead>Data Atend.</TableHead>
                       <TableHead>Dias</TableHead>
                       <TableHead>Distrito</TableHead>
                       <TableHead>Nome GT</TableHead>
-                      <TableHead>Cliente</TableHead>
+                      <TableHead>Observação</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead className="text-right">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredChamados.map((chamado) => (
-                      <TableRow key={chamado.id}>
-                        <TableCell className="font-medium">{chamado.numeroOS}</TableCell>
-                        <TableCell>
-                          {new Date(chamado.dataOS).toLocaleDateString('pt-BR')}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline">
-                            {calcularDias(chamado.dataOS)} dias
-                          </Badge>
-                        </TableCell>
-                        <TableCell>{chamado.distrito}</TableCell>
-                        <TableCell>{chamado.nomeGT}</TableCell>
-                        <TableCell className="max-w-xs truncate">{chamado.cliente}</TableCell>
-                        <TableCell>{getStatusBadge(chamado.status)}</TableCell>
-                        <TableCell className="text-right">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setLocation(`/chamados/${chamado.id}`)}
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
+                      <ChamadoRow
+                        key={chamado.id}
+                        chamado={chamado}
+                        onUpdate={refetch}
+                        onDelete={(id) => deleteMutation.mutate({ id })}
+                      />
                     ))}
                   </TableBody>
                 </Table>

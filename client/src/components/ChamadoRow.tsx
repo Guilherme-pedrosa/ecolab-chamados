@@ -1,0 +1,181 @@
+import { useState } from "react";
+import { trpc } from "@/lib/trpc";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { TableCell, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Eye, Trash2, Edit, Save, X } from "lucide-react";
+import { toast } from "sonner";
+import { useLocation } from "wouter";
+
+interface ChamadoRowProps {
+  chamado: any;
+  onUpdate: () => void;
+  onDelete: (id: number) => void;
+}
+
+export function ChamadoRow({ chamado, onUpdate, onDelete }: ChamadoRowProps) {
+  const [, setLocation] = useLocation();
+  const [isEditing, setIsEditing] = useState(false);
+  const [editData, setEditData] = useState({
+    numeroTarefa: chamado.numeroTarefa || "",
+    dataAtendimento: chamado.dataAtendimento 
+      ? new Date(chamado.dataAtendimento).toISOString().split('T')[0] 
+      : "",
+    observacao: chamado.observacao || "",
+  });
+
+  const updateMutation = trpc.chamados.update.useMutation({
+    onSuccess: () => {
+      onUpdate();
+      setIsEditing(false);
+      toast.success("Chamado atualizado!");
+    },
+    onError: (error) => {
+      toast.error("Erro ao atualizar: " + error.message);
+    },
+  });
+
+  const handleSave = () => {
+    updateMutation.mutate({
+      id: chamado.id,
+      numeroTarefa: editData.numeroTarefa || null,
+      dataAtendimento: editData.dataAtendimento ? new Date(editData.dataAtendimento) : null,
+      observacao: editData.observacao || null,
+    });
+  };
+
+  const calcularDias = (dataOS: string) => {
+    const hoje = new Date();
+    const data = new Date(dataOS);
+    const diff = hoje.getTime() - data.getTime();
+    return Math.floor(diff / (1000 * 60 * 60 * 24));
+  };
+
+  const getStatusBadge = (status: string) => {
+    const variants = {
+      aberto: "destructive",
+      em_andamento: "default",
+      fechado: "secondary",
+    } as const;
+    
+    const labels = {
+      aberto: "Aberto",
+      em_andamento: "Em Andamento",
+      fechado: "Fechado",
+    } as const;
+    
+    return (
+      <Badge variant={variants[status as keyof typeof variants] || "default"}>
+        {labels[status as keyof typeof labels] || status}
+      </Badge>
+    );
+  };
+
+  if (isEditing) {
+    return (
+      <TableRow>
+        <TableCell>{chamado.numeroOS}</TableCell>
+        <TableCell>
+          <Input
+            value={editData.numeroTarefa}
+            onChange={(e) => setEditData({ ...editData, numeroTarefa: e.target.value })}
+            placeholder="Nº Tarefa"
+            className="w-32"
+          />
+        </TableCell>
+        <TableCell>{new Date(chamado.dataOS).toLocaleDateString('pt-BR')}</TableCell>
+        <TableCell>
+          <Input
+            type="date"
+            value={editData.dataAtendimento}
+            onChange={(e) => setEditData({ ...editData, dataAtendimento: e.target.value })}
+            className="w-36"
+          />
+        </TableCell>
+        <TableCell>{calcularDias(chamado.dataOS)}</TableCell>
+        <TableCell>{chamado.distrito}</TableCell>
+        <TableCell>{chamado.nomeGT}</TableCell>
+        <TableCell className="max-w-xs">
+          <Textarea
+            value={editData.observacao}
+            onChange={(e) => setEditData({ ...editData, observacao: e.target.value })}
+            placeholder="Observação"
+            rows={2}
+            className="text-sm"
+          />
+        </TableCell>
+        <TableCell>{getStatusBadge(chamado.status)}</TableCell>
+        <TableCell className="text-right">
+          <div className="flex gap-1 justify-end">
+            <Button
+              size="sm"
+              onClick={handleSave}
+              disabled={updateMutation.isPending}
+            >
+              <Save className="h-4 w-4" />
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setIsEditing(false)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </TableCell>
+      </TableRow>
+    );
+  }
+
+  return (
+    <TableRow>
+      <TableCell className="font-medium">{chamado.numeroOS}</TableCell>
+      <TableCell>{chamado.numeroTarefa || "-"}</TableCell>
+      <TableCell>{new Date(chamado.dataOS).toLocaleDateString('pt-BR')}</TableCell>
+      <TableCell>
+        {chamado.dataAtendimento 
+          ? new Date(chamado.dataAtendimento).toLocaleDateString('pt-BR') 
+          : "-"}
+      </TableCell>
+      <TableCell>{calcularDias(chamado.dataOS)}</TableCell>
+      <TableCell>{chamado.distrito}</TableCell>
+      <TableCell>{chamado.nomeGT}</TableCell>
+      <TableCell className="max-w-xs truncate" title={chamado.observacao || ""}>
+        {chamado.observacao || "-"}
+      </TableCell>
+      <TableCell>{getStatusBadge(chamado.status)}</TableCell>
+      <TableCell className="text-right">
+        <div className="flex gap-1 justify-end">
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => setIsEditing(true)}
+          >
+            <Edit className="h-4 w-4" />
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setLocation(`/chamados/${chamado.id}`)}
+          >
+            <Eye className="h-4 w-4" />
+          </Button>
+          <Button
+            size="sm"
+            variant="destructive"
+            onClick={() => {
+              if (confirm(`Excluir chamado ${chamado.numeroOS}?`)) {
+                onDelete(chamado.id);
+              }
+            }}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      </TableCell>
+    </TableRow>
+  );
+}
+

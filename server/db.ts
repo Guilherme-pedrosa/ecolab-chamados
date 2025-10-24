@@ -90,11 +90,17 @@ export async function getUserByOpenId(openId: string) {
 }
 
 // Chamados queries
-export async function createChamado(chamado: InsertChamado) {
+export async function createChamado(data: InsertChamado) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
-  const result = await db.insert(chamados).values(chamado);
+  // Verificar se já existe um chamado com esse número de OS
+  const existing = await db.select().from(chamados).where(eq(chamados.numeroOS, data.numeroOS)).limit(1);
+  if (existing.length > 0) {
+    throw new Error(`Chamado duplicado: Já existe um chamado com o número OS ${data.numeroOS}`);
+  }
+  
+  const result = await db.insert(chamados).values(data);
   return result;
 }
 
