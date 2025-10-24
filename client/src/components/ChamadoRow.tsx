@@ -6,6 +6,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Eye, Trash2, Edit, Save, X } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
 
@@ -24,6 +31,7 @@ export function ChamadoRow({ chamado, onUpdate, onDelete }: ChamadoRowProps) {
       ? new Date(chamado.dataAtendimento).toISOString().split('T')[0] 
       : "",
     observacao: chamado.observacao || "",
+    status: chamado.status,
   });
 
   const updateMutation = trpc.chamados.update.useMutation({
@@ -43,6 +51,7 @@ export function ChamadoRow({ chamado, onUpdate, onDelete }: ChamadoRowProps) {
       numeroTarefa: editData.numeroTarefa || null,
       dataAtendimento: editData.dataAtendimento ? new Date(editData.dataAtendimento) : null,
       observacao: editData.observacao || null,
+      status: editData.status,
     });
   };
 
@@ -106,7 +115,21 @@ export function ChamadoRow({ chamado, onUpdate, onDelete }: ChamadoRowProps) {
             className="text-sm"
           />
         </TableCell>
-        <TableCell>{getStatusBadge(chamado.status)}</TableCell>
+        <TableCell>
+          <Select
+            value={editData.status}
+            onValueChange={(value) => setEditData({ ...editData, status: value })}
+          >
+            <SelectTrigger className="w-36">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="aberto">Aberto</SelectItem>
+              <SelectItem value="em_andamento">Em Andamento</SelectItem>
+              <SelectItem value="fechado">Fechado</SelectItem>
+            </SelectContent>
+          </Select>
+        </TableCell>
         <TableCell className="text-right">
           <div className="flex gap-1 justify-end">
             <Button
