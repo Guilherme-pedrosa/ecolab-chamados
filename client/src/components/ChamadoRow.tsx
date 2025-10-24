@@ -105,6 +105,14 @@ export function ChamadoRow({ chamado, onUpdate, onDelete }: ChamadoRowProps) {
             className="w-36"
           />
         </TableCell>
+        <TableCell>
+          <Input
+            type="date"
+            value={editData.dataFechamento}
+            onChange={(e) => setEditData({ ...editData, dataFechamento: e.target.value })}
+            className="w-36"
+          />
+        </TableCell>
         <TableCell>{calcularDias(chamado.dataOS)}</TableCell>
         <TableCell>{chamado.distrito}</TableCell>
         <TableCell>{chamado.nomeGT}</TableCell>
@@ -165,6 +173,11 @@ export function ChamadoRow({ chamado, onUpdate, onDelete }: ChamadoRowProps) {
       <TableCell>
         {chamado.dataAtendimento 
           ? new Date(chamado.dataAtendimento).toLocaleDateString('pt-BR') 
+          : "-"}
+      </TableCell>
+      <TableCell>
+        {chamado.dataFechamento 
+          ? new Date(chamado.dataFechamento).toLocaleDateString('pt-BR') 
           : "-"}
       </TableCell>
        <TableCell>{calcularDias(chamado.dataOS)}</TableCell>

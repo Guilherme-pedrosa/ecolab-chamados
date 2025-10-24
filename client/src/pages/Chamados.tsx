@@ -303,6 +303,7 @@ export default function Chamados() {
               <TableHead>Nº Tarefa</TableHead>
               <TableHead>Data OS</TableHead>
               <TableHead>Data Atend.</TableHead>
+              <TableHead>Data Fech.</TableHead>
               <TableHead>Nº Dias</TableHead>
               <TableHead>Distrito</TableHead>
               <TableHead>Nome GT</TableHead>
