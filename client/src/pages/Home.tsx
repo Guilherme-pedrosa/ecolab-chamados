@@ -13,12 +13,9 @@ export default function Home() {
   const { user, isAuthenticated } = useAuth();
   const { data: chamados } = trpc.chamados.list.useQuery();
 
-  const stats = {
-    total: chamados?.length || 0,
-    abertos: chamados?.filter(c => c.status === "aberto").length || 0,
-    emAndamento: chamados?.filter(c => c.status === "em_andamento").length || 0,
-    fechados: chamados?.filter(c => c.status === "fechado").length || 0,
-  };
+  const chamadosAbertos = chamados?.filter(c => c.status === 'aguardando_agendamento').length || 0;
+  const chamadosEmAndamento = chamados?.filter(c => ['agendado', 'ag_retorno', 'atendido_ag_fechamento'].includes(c.status)).length || 0;
+  const chamadosFechados = chamados?.filter(c => c.status === 'fechado').length || 0;
 
   return (
     <DashboardLayout>
@@ -36,7 +33,7 @@ export default function Home() {
               <CardTitle className="text-sm font-medium">Total de Chamados</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.total}</div>
+              <div className="text-2xl font-bold">{chamados?.length || 0}</div>
               <p className="text-xs text-muted-foreground mt-1">
                 Todos os chamados no sistema
               </p>
@@ -48,7 +45,7 @@ export default function Home() {
               <CardTitle className="text-sm font-medium">Chamados Abertos</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-destructive">{stats.abertos}</div>
+              <div className="text-2xl font-bold text-destructive">{chamadosAbertos}</div>
               <p className="text-xs text-muted-foreground mt-1">
                 Aguardando atendimento
               </p>
@@ -60,7 +57,7 @@ export default function Home() {
               <CardTitle className="text-sm font-medium">Em Andamento</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-primary">{stats.emAndamento}</div>
+              <div className="text-2xl font-bold text-primary">{chamadosEmAndamento}</div>
               <p className="text-xs text-muted-foreground mt-1">
                 Sendo processados
               </p>
@@ -72,7 +69,7 @@ export default function Home() {
               <CardTitle className="text-sm font-medium">Fechados</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-muted-foreground">{stats.fechados}</div>
+              <div className="text-2xl font-bold text-muted-foreground">{chamadosFechados}</div>
               <p className="text-xs text-muted-foreground mt-1">
                 Concluídos
               </p>

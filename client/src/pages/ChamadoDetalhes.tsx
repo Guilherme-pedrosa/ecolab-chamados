@@ -308,11 +308,13 @@ export default function ChamadoDetalhes() {
                 <SelectTrigger>
                   <SelectValue placeholder="Manter status atual" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="aberto">Aberto</SelectItem>
-                  <SelectItem value="em_andamento">Em Andamento</SelectItem>
-                  <SelectItem value="fechado">Fechado</SelectItem>
-                </SelectContent>
+            <SelectContent>
+              <SelectItem value="aguardando_agendamento">Aguardando agendamento</SelectItem>
+              <SelectItem value="agendado">Agendado - ag atendimento</SelectItem>
+              <SelectItem value="ag_retorno">Ag retorno</SelectItem>
+              <SelectItem value="atendido_ag_fechamento">Atendido - Ag fechamento</SelectItem>
+              <SelectItem value="fechado">Fechado</SelectItem>
+            </SelectContent>
               </Select>
             </div>
             <Button 

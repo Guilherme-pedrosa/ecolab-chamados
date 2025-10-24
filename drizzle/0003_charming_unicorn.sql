@@ -1,0 +1,1 @@
+ALTER TABLE `chamados` MODIFY COLUMN `status` enum('aguardando_agendamento','agendado','ag_retorno','atendido_ag_fechamento','fechado') NOT NULL DEFAULT 'aguardando_agendamento';

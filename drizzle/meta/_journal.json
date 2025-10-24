@@ -22,6 +22,13 @@
       "when": 1761328822822,
       "tag": "0002_spicy_oracle",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1761330685405,
+      "tag": "0003_charming_unicorn",
+      "breakpoints": true
     }
   ]
 }

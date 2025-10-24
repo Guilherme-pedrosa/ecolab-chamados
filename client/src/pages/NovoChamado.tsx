@@ -56,7 +56,7 @@ export default function NovoChamado() {
       cliente: formData.cliente || undefined,
       nomeTRA: formData.nomeTRA || undefined,
       observacao: formData.observacao || undefined,
-      status: "aberto",
+      status: "aguardando_agendamento",
     });
   };
 

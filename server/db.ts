@@ -119,7 +119,7 @@ export async function getChamadoById(id: number) {
   return result.length > 0 ? result[0] : null;
 }
 
-export async function updateChamadoStatus(id: number, status: "aberto" | "em_andamento" | "fechado") {
+export async function updateChamadoStatus(id: number, status: "aguardando_agendamento" | "agendado" | "ag_retorno" | "atendido_ag_fechamento" | "fechado") {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   

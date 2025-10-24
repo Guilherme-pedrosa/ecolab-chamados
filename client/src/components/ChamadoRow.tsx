@@ -63,21 +63,19 @@ export function ChamadoRow({ chamado, onUpdate, onDelete }: ChamadoRowProps) {
   };
 
   const getStatusBadge = (status: string) => {
-    const variants = {
-      aberto: "destructive",
-      em_andamento: "default",
-      fechado: "secondary",
+    const statusConfig = {
+      aguardando_agendamento: { label: "Aguardando agendamento", className: "bg-yellow-500 text-white" },
+      agendado: { label: "Agendado - ag atendimento", className: "bg-blue-500 text-white" },
+      ag_retorno: { label: "Ag retorno", className: "bg-red-800 text-white" },
+      atendido_ag_fechamento: { label: "Atendido - Ag fechamento", className: "bg-green-400 text-white" },
+      fechado: { label: "Fechado", className: "bg-green-800 text-white" },
     } as const;
     
-    const labels = {
-      aberto: "Aberto",
-      em_andamento: "Em Andamento",
-      fechado: "Fechado",
-    } as const;
+    const config = statusConfig[status as keyof typeof statusConfig] || { label: status, className: "" };
     
     return (
-      <Badge variant={variants[status as keyof typeof variants] || "default"}>
-        {labels[status as keyof typeof labels] || status}
+      <Badge className={config.className}>
+        {config.label}
       </Badge>
     );
   };
@@ -124,8 +122,10 @@ export function ChamadoRow({ chamado, onUpdate, onDelete }: ChamadoRowProps) {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="aberto">Aberto</SelectItem>
-              <SelectItem value="em_andamento">Em Andamento</SelectItem>
+              <SelectItem value="aguardando_agendamento">Aguardando agendamento</SelectItem>
+              <SelectItem value="agendado">Agendado - ag atendimento</SelectItem>
+              <SelectItem value="ag_retorno">Ag retorno</SelectItem>
+              <SelectItem value="atendido_ag_fechamento">Atendido - Ag fechamento</SelectItem>
               <SelectItem value="fechado">Fechado</SelectItem>
             </SelectContent>
           </Select>

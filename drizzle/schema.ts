@@ -40,7 +40,13 @@ export const chamados = mysqlTable("chamados", {
   cliente: text("cliente"),
   nomeTRA: varchar("nomeTRA", { length: 100 }),
   observacao: text("observacao"),
-  status: mysqlEnum("status", ["aberto", "em_andamento", "fechado"]).default("aberto").notNull(),
+  status: mysqlEnum("status", [
+    "aguardando_agendamento",
+    "agendado",
+    "ag_retorno",
+    "atendido_ag_fechamento",
+    "fechado"
+  ]).default("aguardando_agendamento").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   createdBy: int("createdBy").references(() => users.id),

@@ -64,7 +64,7 @@ export const appRouter = router({
     updateStatus: protectedProcedure
       .input((val: unknown) => {
         if (typeof val === "object" && val !== null && "id" in val && "status" in val) {
-          return val as { id: number; status: "aberto" | "em_andamento" | "fechado" };
+          return val as { id: number; status: "aguardando_agendamento" | "agendado" | "ag_retorno" | "atendido_ag_fechamento" | "fechado" };
         }
         throw new Error("Invalid input");
       })
@@ -106,7 +106,10 @@ export const appRouter = router({
         "Cliente": c.cliente || '',
         "Nome TRA": c.nomeTRA || '',
         "Observação": c.observacao || '',
-        "Status": c.status === 'aberto' ? 'Aberto' : c.status === 'em_andamento' ? 'Em Andamento' : 'Fechado',
+        "Status": c.status === 'aguardando_agendamento' ? 'Aguardando agendamento' : 
+                  c.status === 'agendado' ? 'Agendado - ag atendimento' :
+                  c.status === 'ag_retorno' ? 'Ag retorno' :
+                  c.status === 'atendido_ag_fechamento' ? 'Atendido - Ag fechamento' : 'Fechado',
         "Data Criação": new Date(c.createdAt).toLocaleDateString('pt-BR'),
       }));
       
@@ -144,7 +147,7 @@ export const appRouter = router({
           try {
             await createChamado({ 
               ...chamado, 
-              status: "aberto",
+              status: "aguardando_agendamento",
               createdBy: ctx.user.id 
             });
             results.push({ success: true, numeroOS: chamado.numeroOS });
