@@ -1,4 +1,3 @@
-import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { APP_LOGO, APP_TITLE, getLoginUrl } from "@/const";
@@ -10,7 +9,6 @@ import { trpc } from "@/lib/trpc";
  * When building pages, remember your instructions in Frontend Workflow, Frontend Best Practices, Design Guide and Common Pitfalls
  */
 export default function Home() {
-  const { user, isAuthenticated } = useAuth();
   const { data: chamados } = trpc.chamados.list.useQuery();
 
   const chamadosAbertos = chamados?.filter(c => c.status === 'aguardando_agendamento').length || 0;
