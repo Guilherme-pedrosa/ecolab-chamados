@@ -1,7 +1,7 @@
 import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
-import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
+import { publicProcedure, router } from "./_core/trpc";
 
 export const appRouter = router({
   system: systemRouter,
@@ -35,7 +35,7 @@ export const appRouter = router({
         return await getChamadoById(input.id);
       }),
     
-    create: protectedProcedure
+    create: publicProcedure
       .input((val: unknown) => {
         if (typeof val === "object" && val !== null) {
           return val as any;
@@ -44,10 +44,10 @@ export const appRouter = router({
       })
       .mutation(async ({ input, ctx }) => {
         const { createChamado } = await import("./db");
-        return await createChamado({ ...input, createdBy: ctx.user.id });
+        return await createChamado({ ...input, createdBy: null });
       }),
     
-    update: protectedProcedure
+    update: publicProcedure
       .input((val: unknown) => {
         if (typeof val === "object" && val !== null && "id" in val) {
           return val as any;
@@ -61,7 +61,7 @@ export const appRouter = router({
         return { success: true };
       }),
     
-    updateStatus: protectedProcedure
+    updateStatus: publicProcedure
       .input((val: unknown) => {
         if (typeof val === "object" && val !== null && "id" in val && "status" in val) {
           return val as { id: number; status: "aguardando_agendamento" | "agendado" | "ag_retorno" | "atendido_ag_fechamento" | "fechado" };
@@ -74,7 +74,7 @@ export const appRouter = router({
         return { success: true };
       }),
     
-    delete: protectedProcedure
+    delete: publicProcedure
       .input((val: unknown) => {
         if (typeof val === "object" && val !== null && "id" in val && typeof val.id === "number") {
           return val as { id: number };
@@ -125,7 +125,7 @@ export const appRouter = router({
       return { fileBase64: base64, filename: `chamados_${new Date().toISOString().split('T')[0]}.xlsx` };
     }),
     
-    importFromExcel: protectedProcedure
+    importFromExcel: publicProcedure
       .input((val: unknown) => {
         if (typeof val === "object" && val !== null && "fileBase64" in val && typeof val.fileBase64 === "string") {
           return val as { fileBase64: string };
@@ -148,7 +148,7 @@ export const appRouter = router({
             await createChamado({ 
               ...chamado, 
               status: "aguardando_agendamento",
-              createdBy: ctx.user.id 
+              createdBy: null 
             });
             results.push({ success: true, numeroOS: chamado.numeroOS });
           } catch (error) {
@@ -181,7 +181,7 @@ export const appRouter = router({
         return await getEvolucoesByChamadoId(input.chamadoId);
       }),
     
-    create: protectedProcedure
+    create: publicProcedure
       .input((val: unknown) => {
         if (typeof val === "object" && val !== null) {
           return val as any;
@@ -199,7 +199,7 @@ export const appRouter = router({
           }
         }
         
-        return await createEvolucao({ ...input, createdBy: ctx.user.id });
+        return await createEvolucao({ ...input, createdBy: null });
       }),
   }),
 });

@@ -29,6 +29,7 @@ export default function ChamadoDetalhes() {
   const [editData, setEditData] = useState({
     numeroTarefa: "",
     dataAtendimento: "",
+    dataFechamento: "",
     observacao: "",
   });
 
@@ -37,9 +38,14 @@ export default function ChamadoDetalhes() {
   useEffect(() => {
     if (chamado) {
       setEditData({
-        numeroTarefa: chamado.numeroTarefa || "",
-        dataAtendimento: chamado.dataAtendimento ? new Date(chamado.dataAtendimento).toISOString().split('T')[0] : "",
-        observacao: chamado.observacao || "",
+        numeroTarefa: chamado?.numeroTarefa || "",
+        dataAtendimento: chamado?.dataAtendimento 
+          ? new Date(chamado.dataAtendimento).toISOString().split('T')[0] 
+          : "",
+        dataFechamento: chamado?.dataFechamento 
+          ? new Date(chamado.dataFechamento).toISOString().split('T')[0] 
+          : "",
+        observacao: chamado?.observacao || "",
       });
     }
   }, [chamado]);
@@ -221,6 +227,20 @@ export default function ChamadoDetalhes() {
                 )}
               </div>
               <div>
+                <Label className="text-muted-foreground">Data do Fechamento</Label>
+                {isEditing ? (
+                  <Input
+                    type="date"
+                    value={editData.dataFechamento}
+                    onChange={(e) => setEditData({ ...editData, dataFechamento: e.target.value })}
+                  />
+                ) : (
+                  <p className="font-medium">
+                    {chamado.dataFechamento ? new Date(chamado.dataFechamento).toLocaleDateString('pt-BR') : "-"}
+                  </p>
+                )}
+              </div>
+              <div>
                 <Label className="text-muted-foreground">Distrito</Label>
                 <p className="font-medium">{chamado.distrito || "-"}</p>
               </div>
@@ -263,6 +283,7 @@ export default function ChamadoDetalhes() {
                         id: chamadoId,
                         numeroTarefa: editData.numeroTarefa || null,
                         dataAtendimento: editData.dataAtendimento ? new Date(editData.dataAtendimento) : null,
+                        dataFechamento: editData.dataFechamento ? new Date(editData.dataFechamento) : null,
                         observacao: editData.observacao || null,
                       });
                     }}

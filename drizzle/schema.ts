@@ -34,6 +34,7 @@ export const chamados = mysqlTable("chamados", {
   numeroTarefa: varchar("numeroTarefa", { length: 50 }),
   dataOS: timestamp("dataOS").notNull(),
   dataAtendimento: timestamp("dataAtendimento"),
+  dataFechamento: timestamp("dataFechamento"),
   distrito: varchar("distrito", { length: 10 }),
   nomeGT: varchar("nomeGT", { length: 100 }),
   codCliente: varchar("codCliente", { length: 20 }),

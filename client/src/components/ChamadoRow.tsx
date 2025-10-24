@@ -30,6 +30,9 @@ export function ChamadoRow({ chamado, onUpdate, onDelete }: ChamadoRowProps) {
     dataAtendimento: chamado.dataAtendimento 
       ? new Date(chamado.dataAtendimento).toISOString().split('T')[0] 
       : "",
+    dataFechamento: chamado.dataFechamento 
+      ? new Date(chamado.dataFechamento).toISOString().split('T')[0] 
+      : "",
     observacao: chamado.observacao || "",
     status: chamado.status,
   });
@@ -50,6 +53,7 @@ export function ChamadoRow({ chamado, onUpdate, onDelete }: ChamadoRowProps) {
       id: chamado.id,
       numeroTarefa: editData.numeroTarefa || null,
       dataAtendimento: editData.dataAtendimento ? new Date(editData.dataAtendimento) : null,
+      dataFechamento: editData.dataFechamento ? new Date(editData.dataFechamento) : null,
       observacao: editData.observacao || null,
       status: editData.status,
     });
