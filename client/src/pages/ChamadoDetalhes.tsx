@@ -1,0 +1,249 @@
+import { useState } from "react";
+import { useRoute, useLocation } from "wouter";
+import { trpc } from "@/lib/trpc";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { ArrowLeft, Plus } from "lucide-react";
+import DashboardLayout from "@/components/DashboardLayout";
+import { toast } from "sonner";
+
+export default function ChamadoDetalhes() {
+  const [, params] = useRoute("/chamados/:id");
+  const [, setLocation] = useLocation();
+  const chamadoId = params?.id ? parseInt(params.id) : 0;
+
+  const [novaEvolucao, setNovaEvolucao] = useState("");
+  const [novoStatus, setNovoStatus] = useState<string>("");
+
+  const { data: chamado, isLoading } = trpc.chamados.getById.useQuery({ id: chamadoId });
+  const { data: evolucoes, refetch: refetchEvolucoes } = trpc.evolucoes.getByChamadoId.useQuery({ chamadoId });
+  
+  const utils = trpc.useUtils();
+  const createEvolucao = trpc.evolucoes.create.useMutation({
+    onSuccess: () => {
+      refetchEvolucoes();
+      utils.chamados.list.invalidate();
+      utils.chamados.getById.invalidate({ id: chamadoId });
+      setNovaEvolucao("");
+      setNovoStatus("");
+      toast.success("Evolução adicionada com sucesso!");
+    },
+    onError: (error) => {
+      toast.error("Erro ao adicionar evolução: " + error.message);
+    },
+  });
+
+  const handleAddEvolucao = () => {
+    if (!novaEvolucao.trim()) {
+      toast.error("Por favor, descreva a evolução");
+      return;
+    }
+
+    createEvolucao.mutate({
+      chamadoId,
+      descricao: novaEvolucao,
+      statusAnterior: chamado?.status,
+      statusNovo: novoStatus || chamado?.status,
+    });
+  };
+
+  const calcularDias = (dataOS: Date | string) => {
+    const data = new Date(dataOS);
+    const hoje = new Date();
+    const diff = hoje.getTime() - data.getTime();
+    return Math.floor(diff / (1000 * 60 * 60 * 24));
+  };
+
+  const getStatusBadge = (status: string) => {
+    const variants = {
+      aberto: "destructive",
+      em_andamento: "default",
+      fechado: "secondary",
+    } as const;
+    
+    const labels = {
+      aberto: "Aberto",
+      em_andamento: "Em Andamento",
+      fechado: "Fechado",
+    } as const;
+    
+    return (
+      <Badge variant={variants[status as keyof typeof variants] || "default"}>
+        {labels[status as keyof typeof labels] || status}
+      </Badge>
+    );
+  };
+
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="text-center py-8">Carregando...</div>
+      </DashboardLayout>
+    );
+  }
+
+  if (!chamado) {
+    return (
+      <DashboardLayout>
+        <div className="text-center py-8">
+          <p className="text-muted-foreground">Chamado não encontrado</p>
+          <Button onClick={() => setLocation("/chamados")} className="mt-4">
+            Voltar para lista
+          </Button>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  return (
+    <DashboardLayout>
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" onClick={() => setLocation("/chamados")}>
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Chamado #{chamado.numeroOS}</h1>
+            <p className="text-muted-foreground">
+              Aberto há {calcularDias(chamado.dataOS)} dias
+            </p>
+          </div>
+        </div>
+
+        {/* Informações do Chamado */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>Informações do Chamado</CardTitle>
+              {getStatusBadge(chamado.status)}
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div>
+                <Label className="text-muted-foreground">Número OS</Label>
+                <p className="font-medium">{chamado.numeroOS}</p>
+              </div>
+              <div>
+                <Label className="text-muted-foreground">Data OS</Label>
+                <p className="font-medium">
+                  {new Date(chamado.dataOS).toLocaleDateString('pt-BR')}
+                </p>
+              </div>
+              <div>
+                <Label className="text-muted-foreground">Distrito</Label>
+                <p className="font-medium">{chamado.distrito || "-"}</p>
+              </div>
+              <div>
+                <Label className="text-muted-foreground">Nome GT</Label>
+                <p className="font-medium">{chamado.nomeGT || "-"}</p>
+              </div>
+              <div>
+                <Label className="text-muted-foreground">Código Cliente</Label>
+                <p className="font-medium">{chamado.codCliente || "-"}</p>
+              </div>
+              <div>
+                <Label className="text-muted-foreground">Nome TRA</Label>
+                <p className="font-medium">{chamado.nomeTRA || "-"}</p>
+              </div>
+              <div className="md:col-span-2">
+                <Label className="text-muted-foreground">Cliente</Label>
+                <p className="font-medium">{chamado.cliente || "-"}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Nova Evolução */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Adicionar Evolução</CardTitle>
+            <CardDescription>
+              Registre uma nova atualização para este chamado
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="descricao">Descrição</Label>
+              <Textarea
+                id="descricao"
+                placeholder="Descreva o que foi feito ou a situação atual..."
+                value={novaEvolucao}
+                onChange={(e) => setNovaEvolucao(e.target.value)}
+                rows={4}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="status">Atualizar Status (opcional)</Label>
+              <Select value={novoStatus} onValueChange={setNovoStatus}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Manter status atual" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="aberto">Aberto</SelectItem>
+                  <SelectItem value="em_andamento">Em Andamento</SelectItem>
+                  <SelectItem value="fechado">Fechado</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <Button 
+              onClick={handleAddEvolucao} 
+              disabled={createEvolucao.isPending}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Adicionar Evolução
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Histórico de Evoluções */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Histórico de Evoluções</CardTitle>
+            <CardDescription>
+              {evolucoes?.length || 0} evolução(ões) registrada(s)
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {!evolucoes || evolucoes.length === 0 ? (
+              <p className="text-muted-foreground text-center py-4">
+                Nenhuma evolução registrada ainda
+              </p>
+            ) : (
+              <div className="space-y-4">
+                {evolucoes.map((evolucao) => (
+                  <div key={evolucao.id} className="border-l-2 border-primary pl-4 pb-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-sm text-muted-foreground">
+                        {new Date(evolucao.createdAt).toLocaleString('pt-BR')}
+                      </span>
+                      {evolucao.statusNovo && evolucao.statusAnterior !== evolucao.statusNovo && (
+                        <div className="flex items-center gap-2">
+                          {getStatusBadge(evolucao.statusAnterior || "")}
+                          <span className="text-muted-foreground">→</span>
+                          {getStatusBadge(evolucao.statusNovo)}
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-sm">{evolucao.descricao}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </DashboardLayout>
+  );
+}
+

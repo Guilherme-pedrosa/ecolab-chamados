@@ -25,4 +25,39 @@ export const users = mysqlTable("users", {
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
-// TODO: Add your tables here
+/**
+ * Tabela de chamados (Ordens de Serviço)
+ */
+export const chamados = mysqlTable("chamados", {
+  id: int("id").autoincrement().primaryKey(),
+  numeroOS: varchar("numeroOS", { length: 20 }).notNull().unique(),
+  dataOS: timestamp("dataOS").notNull(),
+  distrito: varchar("distrito", { length: 10 }),
+  nomeGT: varchar("nomeGT", { length: 100 }),
+  codCliente: varchar("codCliente", { length: 20 }),
+  cliente: text("cliente"),
+  nomeTRA: varchar("nomeTRA", { length: 100 }),
+  status: mysqlEnum("status", ["aberto", "em_andamento", "fechado"]).default("aberto").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  createdBy: int("createdBy").references(() => users.id),
+});
+
+export type Chamado = typeof chamados.$inferSelect;
+export type InsertChamado = typeof chamados.$inferInsert;
+
+/**
+ * Tabela de evoluções dos chamados
+ */
+export const evolucoes = mysqlTable("evolucoes", {
+  id: int("id").autoincrement().primaryKey(),
+  chamadoId: int("chamadoId").notNull().references(() => chamados.id, { onDelete: "cascade" }),
+  descricao: text("descricao").notNull(),
+  statusAnterior: mysqlEnum("statusAnterior", ["aberto", "em_andamento", "fechado"]),
+  statusNovo: mysqlEnum("statusNovo", ["aberto", "em_andamento", "fechado"]),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  createdBy: int("createdBy").notNull().references(() => users.id),
+});
+
+export type Evolucao = typeof evolucoes.$inferSelect;
+export type InsertEvolucao = typeof evolucoes.$inferInsert;
