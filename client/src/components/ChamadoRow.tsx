@@ -95,7 +95,7 @@ export function ChamadoRow({ chamado, onUpdate, onDelete }: ChamadoRowProps) {
   };
 
   return (
-    <TableRow key={chamado.id}>
+    <TableRow>
       <TableCell className="font-medium">{chamado.numeroOS}</TableCell>
       <TableCell>
         {isEditing ? (
