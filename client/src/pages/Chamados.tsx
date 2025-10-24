@@ -140,7 +140,11 @@ export default function Chamados() {
               Gerencie todos os chamados da Ecolab
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
+            <Button onClick={() => setLocation("/chamados/novo")}>
+              <Plus className="mr-2 h-4 w-4" />
+              Novo Chamado
+            </Button>
             <Button
               variant="outline"
               onClick={async () => {
