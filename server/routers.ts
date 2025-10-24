@@ -47,6 +47,20 @@ export const appRouter = router({
         return await createChamado({ ...input, createdBy: ctx.user.id });
       }),
     
+    update: protectedProcedure
+      .input((val: unknown) => {
+        if (typeof val === "object" && val !== null && "id" in val) {
+          return val as any;
+        }
+        throw new Error("Invalid input");
+      })
+      .mutation(async ({ input }) => {
+        const { updateChamado } = await import("./db");
+        const { id, ...data } = input;
+        await updateChamado(id, data);
+        return { success: true };
+      }),
+    
     updateStatus: protectedProcedure
       .input((val: unknown) => {
         if (typeof val === "object" && val !== null && "id" in val && "status" in val) {
@@ -82,13 +96,16 @@ export const appRouter = router({
       // Preparar dados para exportação
       const exportData = chamados.map(c => ({
         "Nº OS": c.numeroOS,
+        "Nº Tarefa": c.numeroTarefa || '',
         "Data OS": new Date(c.dataOS).toLocaleDateString('pt-BR'),
+        "Data Atendimento": c.dataAtendimento ? new Date(c.dataAtendimento).toLocaleDateString('pt-BR') : '',
         "Dias em Aberto": Math.floor((new Date().getTime() - new Date(c.dataOS).getTime()) / (1000 * 60 * 60 * 24)),
         "Distrito": c.distrito || '',
         "Nome GT": c.nomeGT || '',
         "Cód. Cliente": c.codCliente || '',
         "Cliente": c.cliente || '',
         "Nome TRA": c.nomeTRA || '',
+        "Observação": c.observacao || '',
         "Status": c.status === 'aberto' ? 'Aberto' : c.status === 'em_andamento' ? 'Em Andamento' : 'Fechado',
         "Data Criação": new Date(c.createdAt).toLocaleDateString('pt-BR'),
       }));

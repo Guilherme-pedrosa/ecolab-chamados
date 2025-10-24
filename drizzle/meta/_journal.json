@@ -15,6 +15,13 @@
       "when": 1761327518855,
       "tag": "0001_cheerful_fantastic_four",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1761328822822,
+      "tag": "0002_spicy_oracle",
+      "breakpoints": true
     }
   ]
 }

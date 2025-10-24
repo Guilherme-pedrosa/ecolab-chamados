@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRoute, useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
@@ -24,11 +25,39 @@ export default function ChamadoDetalhes() {
 
   const [novaEvolucao, setNovaEvolucao] = useState("");
   const [novoStatus, setNovoStatus] = useState<string>("");
+  const [isEditing, setIsEditing] = useState(false);
+  const [editData, setEditData] = useState({
+    numeroTarefa: "",
+    dataAtendimento: "",
+    observacao: "",
+  });
 
   const { data: chamado, isLoading } = trpc.chamados.getById.useQuery({ id: chamadoId });
+  
+  useEffect(() => {
+    if (chamado) {
+      setEditData({
+        numeroTarefa: chamado.numeroTarefa || "",
+        dataAtendimento: chamado.dataAtendimento ? new Date(chamado.dataAtendimento).toISOString().split('T')[0] : "",
+        observacao: chamado.observacao || "",
+      });
+    }
+  }, [chamado]);
   const { data: evolucoes, refetch: refetchEvolucoes } = trpc.evolucoes.getByChamadoId.useQuery({ chamadoId });
   
   const utils = trpc.useUtils();
+  const updateChamado = trpc.chamados.update.useMutation({
+    onSuccess: () => {
+      utils.chamados.list.invalidate();
+      utils.chamados.getById.invalidate({ id: chamadoId });
+      setIsEditing(false);
+      toast.success("Chamado atualizado com sucesso!");
+    },
+    onError: (error) => {
+      toast.error("Erro ao atualizar chamado: " + error.message);
+    },
+  });
+  
   const createEvolucao = trpc.evolucoes.create.useMutation({
     onSuccess: () => {
       refetchEvolucoes();
@@ -135,10 +164,36 @@ export default function ChamadoDetalhes() {
                 <p className="font-medium">{chamado.numeroOS}</p>
               </div>
               <div>
+                <Label className="text-muted-foreground">Número da Tarefa</Label>
+                {isEditing ? (
+                  <Input
+                    value={editData.numeroTarefa}
+                    onChange={(e) => setEditData({ ...editData, numeroTarefa: e.target.value })}
+                    placeholder="Digite o número da tarefa"
+                  />
+                ) : (
+                  <p className="font-medium">{chamado.numeroTarefa || "-"}</p>
+                )}
+              </div>
+              <div>
                 <Label className="text-muted-foreground">Data OS</Label>
                 <p className="font-medium">
                   {new Date(chamado.dataOS).toLocaleDateString('pt-BR')}
                 </p>
+              </div>
+              <div>
+                <Label className="text-muted-foreground">Data do Atendimento</Label>
+                {isEditing ? (
+                  <Input
+                    type="date"
+                    value={editData.dataAtendimento}
+                    onChange={(e) => setEditData({ ...editData, dataAtendimento: e.target.value })}
+                  />
+                ) : (
+                  <p className="font-medium">
+                    {chamado.dataAtendimento ? new Date(chamado.dataAtendimento).toLocaleDateString('pt-BR') : "-"}
+                  </p>
+                )}
               </div>
               <div>
                 <Label className="text-muted-foreground">Distrito</Label>
@@ -160,6 +215,45 @@ export default function ChamadoDetalhes() {
                 <Label className="text-muted-foreground">Cliente</Label>
                 <p className="font-medium">{chamado.cliente || "-"}</p>
               </div>
+              <div className="md:col-span-2">
+                <Label className="text-muted-foreground">Observação</Label>
+                {isEditing ? (
+                  <Textarea
+                    value={editData.observacao}
+                    onChange={(e) => setEditData({ ...editData, observacao: e.target.value })}
+                    placeholder="Digite observações sobre o chamado"
+                    rows={3}
+                  />
+                ) : (
+                  <p className="font-medium whitespace-pre-wrap">{chamado.observacao || "-"}</p>
+                )}
+              </div>
+            </div>
+            <div className="flex gap-2 mt-4">
+              {isEditing ? (
+                <>
+                  <Button
+                    onClick={() => {
+                      updateChamado.mutate({
+                        id: chamadoId,
+                        numeroTarefa: editData.numeroTarefa || null,
+                        dataAtendimento: editData.dataAtendimento ? new Date(editData.dataAtendimento) : null,
+                        observacao: editData.observacao || null,
+                      });
+                    }}
+                    disabled={updateChamado.isPending}
+                  >
+                    {updateChamado.isPending ? "Salvando..." : "Salvar"}
+                  </Button>
+                  <Button variant="outline" onClick={() => setIsEditing(false)}>
+                    Cancelar
+                  </Button>
+                </>
+              ) : (
+                <Button onClick={() => setIsEditing(true)}>
+                  Editar Informações
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>

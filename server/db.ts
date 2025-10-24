@@ -120,6 +120,13 @@ export async function updateChamadoStatus(id: number, status: "aberto" | "em_and
   await db.update(chamados).set({ status, updatedAt: new Date() }).where(eq(chamados.id, id));
 }
 
+export async function updateChamado(id: number, data: Partial<InsertChamado>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(chamados).set({ ...data, updatedAt: new Date() }).where(eq(chamados.id, id));
+}
+
 export async function deleteChamado(id: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
